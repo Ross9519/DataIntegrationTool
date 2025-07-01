@@ -14,13 +14,13 @@ namespace DataIntegrationTool.Test
         private const string DUPLICATEHEADEREXCEPTION = "DuplicateHeader";
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_ReturnsCorrectNumberOfRecords()
+        public async Task HandleContentAsync_ReturnsCorrectNumberOfRecords()
         {
             // Arrange
             var expectedCount = 2;
 
             // Act
-            var result = (await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersTest)).ToList();
+            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersTest)).ToList();
 
             // Assert
             Assert.Equal(expectedCount, result.Count);
@@ -31,17 +31,17 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_ReturnsEmptyList()
+        public async Task HandleContentAsync_ReturnsEmptyList()
         {
             // Act
-            var result = (await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerEmpty)).ToList();
+            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerEmpty)).ToList();
 
             // Assert
             Assert.Empty(result);
         }
 
         [Fact]
-        public async Task ReadFromFileAsync_WrongFilePath_ThrowsException()
+        public async Task HandleFilePathAsync_WrongFilePath_ThrowsException()
         {
             // Arrange
             var testCsv = "TestData/not_existent_file.csv";
@@ -49,7 +49,7 @@ namespace DataIntegrationTool.Test
             // Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                await new CsvReaderService().ReadFromFileAsync<CustomerRaw>(testCsv);
+                await new CsvReaderService().HandleFilePathAsync<CustomerRaw>(testCsv);
             });
 
             Assert.Equal(CsvErrorType.FileNotFound, ex.ErrorType);
@@ -57,10 +57,10 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_OptionalFieldsMissing_ParsesSuccessfully()
+        public async Task HandleContentAsync_OptionalFieldsMissing_ParsesSuccessfully()
         {
             //Assert
-            var result = (await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersOptionalFieldsMissing)).ToList();
+            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersOptionalFieldsMissing)).ToList();
 
             // Assert
             Assert.Single(result);
@@ -75,25 +75,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_RequiredFieldMissing_ThrowsException()
+        public async Task HandleContentAsync_MissingHeader_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersRequiredFieldsMissing);
-            });
-
-            Assert.Equal(CsvErrorType.MissingField, ex.ErrorType);
-            Assert.Contains(MISSINGFIELDEXCEPTION, ex.Message);
-        }
-
-        [Fact]
-        public async Task ConvertFromCsvToTAsync_MissingHeader_ThrowsException()
-        {
-            // Act & Assert
-            var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
-            {
-                var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersMissingHeaders);
+                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersMissingHeaders);
             });
 
             Assert.Equal(CsvErrorType.MissingHeader, ex.ErrorType);
@@ -101,12 +88,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_MissingAllHeaders_ThrowsException()
+        public async Task HandleContentAsync_MissingAllHeaders_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerMissingAllHeaders);
+                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerMissingAllHeaders);
             });
 
             Assert.Equal(CsvErrorType.MissingAllHeaders, ex.ErrorType);
@@ -114,12 +101,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_DuplicateHeader_ThrowsExceptionWithCorrectErrorType()
+        public async Task HandleContentAsync_DuplicateHeader_ThrowsExceptionWithCorrectErrorType()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerDuplicateHeader);
+                await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerDuplicateHeader);
             });
 
             Assert.Equal(CsvErrorType.DuplicateHeader, ex.ErrorType);
@@ -127,12 +114,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task ConvertFromCsvToTAsync_MalformedRows_ThrowsException()
+        public async Task HandleContentAsync_MalformedRows_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersMalformedRows);
+                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersMalformedRows);
             });
 
             Assert.Equal(CsvErrorType.MissingField, ex.ErrorType);

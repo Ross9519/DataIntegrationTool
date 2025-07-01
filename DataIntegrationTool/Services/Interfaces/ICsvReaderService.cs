@@ -1,9 +1,11 @@
-﻿namespace DataIntegrationTool.Services.Interfaces
+﻿
+namespace DataIntegrationTool.Services.Interfaces
 {
     public interface ICsvReaderService
     {
-        Task<IEnumerable<T>> ConvertFromCsvToTAsync<T>(string csvContent) where T : class;
+        Task<IEnumerable<T>> HandleStreamAsync<T>(Stream csvStream, CsvReaderOptions? options = null) where T : class;
+        Task<IEnumerable<T>> HandleContentAsync<T>(string? csvContent, CsvReaderOptions? options = null) where T : class;
 
-        Task<IEnumerable<T>> ReadFromFileAsync<T>(string filePath) where T : class;
+        Task<IEnumerable<T>> HandleFilePathAsync<T>(string filePath, CsvReaderOptions? options = null) where T : class;
     }
 }

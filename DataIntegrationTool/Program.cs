@@ -4,18 +4,35 @@ using DataIntegrationTool.Models;
 using Microsoft.Extensions.Configuration;
 
 var configuration = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
 
-string filePath = configuration["InputFiles:CustomerCsvPath"] ?? throw new Exception("Percorso CSV non trovato nella configurazione");
+var csvOptions = configuration.GetSection("CsvReaderOptions").Get<CsvReaderOptions>();
+var inputSource = configuration.GetSection("InputSource").Get<InputSource>();
 
+if (inputSource == null || string.IsNullOrWhiteSpace(inputSource.Type))
+{
+    throw new InvalidOperationException("InputSource configuration is missing or invalid.");
+}
 
 ICsvReaderService csvReader = new CsvReaderService();
 
 try
 {
-    var customers = await csvReader.ReadFromFileAsync<CustomerRaw>(filePath);
+    IEnumerable<CustomerRaw> customers;
+
+    if (inputSource.Type == "File")
+    {
+        customers = await csvReader.HandleFilePathAsync<CustomerRaw>(inputSource.FilePath, csvOptions);
+    }
+    else if (inputSource.Type == "String")
+    {
+        customers = await csvReader.HandleContentAsync<CustomerRaw>(inputSource.Content, csvOptions);
+    }
+    else
+    {
+        throw new InvalidOperationException("Tipo InputSource non valido.");
+    }
 
     Console.WriteLine("Customers loaded successfully:");
     foreach (var customer in customers)

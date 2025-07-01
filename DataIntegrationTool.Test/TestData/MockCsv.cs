@@ -9,8 +9,6 @@ Marco,Demo,marco.demo@example.com,Demo Inc,Developer,+333444555,Spain";
         public static string CustomerMissingAllHeaders = @"";
         public static string CustomersOptionalFieldsMissing = @"FirstName,LastName,Email,Company,JobTitle,Phone,Country
 Laura,Verdi,laura.verdi@example.com,,,,";
-        public static string CustomersRequiredFieldsMissing = @"FirstName,LastName,Email,Company,JobTitle,Phone,Country
-Marco,Russo,ACME Corp,Manager,555-1234,Italy";
         public static string CustomersMissingHeaders = @"FirstName,LastName,Email
 Anna,Test,anna.test@example.com
 Marco,Demo,marco.demo@example.com";
