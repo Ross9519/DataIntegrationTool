@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataIntegrationTool", "DataIntegrationTool\DataIntegrationTool.csproj", "{185D621E-8BF4-4587-A5F7-3BB5E23B3449}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataIntegrationTool.Test", "DataIntegrationTool.Test\DataIntegrationTool.Test.csproj", "{FF47F813-0583-4436-99A6-4881A97BE4BB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{185D621E-8BF4-4587-A5F7-3BB5E23B3449} = {185D621E-8BF4-4587-A5F7-3BB5E23B3449}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{185D621E-8BF4-4587-A5F7-3BB5E23B3449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{185D621E-8BF4-4587-A5F7-3BB5E23B3449}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{185D621E-8BF4-4587-A5F7-3BB5E23B3449}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{185D621E-8BF4-4587-A5F7-3BB5E23B3449}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF47F813-0583-4436-99A6-4881A97BE4BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF47F813-0583-4436-99A6-4881A97BE4BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF47F813-0583-4436-99A6-4881A97BE4BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF47F813-0583-4436-99A6-4881A97BE4BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {78359FC7-40D1-4D6D-9708-19BE0E631EDF}
+	EndGlobalSection
+EndGlobal

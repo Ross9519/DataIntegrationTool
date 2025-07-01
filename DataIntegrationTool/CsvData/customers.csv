@@ -1,0 +1,11 @@
+FirstName,LastName,Email,Company,JobTitle,Phone,Country
+John,Doe,john.doe@example.com,Contoso Ltd,Developer,+123456789,USA
+Jane,Smith,jane.smith@example.com,Fabrikam,Product Manager,+987654321,Canada
+Alice,Johnson,alice.j@example.com,Globex,Data Analyst,+111222333,UK
+Bob,Brown,bob.brown@example.com,Initech,System Administrator,+444555666,Australia
+Emily,Davis,emily.davis@example.com,Umbrella Corp,UX Designer,+777888999,Germany
+Michael,Wilson,michael.w@example.com,Wonka Industries,Marketing Lead,+666555444,France
+Sarah,White,sarah.w@example.com,Stark Industries,DevOps Engineer,+333222111,USA
+Tom,Black,tom.b@example.com,Dunder Mifflin,Sales Associate,+999888777,Canada
+Laura,Green,laura.g@example.com,Wayne Enterprises,IT Consultant,+121212121,UK
+Steve,Gray,steve.g@example.com,Soylent Corp,HR Manager,+232323232,Germany
