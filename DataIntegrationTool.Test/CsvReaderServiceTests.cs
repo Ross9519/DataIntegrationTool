@@ -9,7 +9,9 @@ namespace DataIntegrationTool.Test
         private const string FILENOTFOUNDEXCEPTION = "FileNotFound";
         private const string MISSINGFIELDEXCEPTION = "MissingField";
         private const string HEADERVALIDATIONEXCEPTION = "HeaderValidation";
-        private const string TYPECONVERTEREXCEPTION = "TypeConverter";
+        private const string MISSINGHEADEREXCEPTION = "MissingHeader";
+        private const string MISSINGALLHEADERSEXCEPTION = "MissingAllHeaders";
+        private const string DUPLICATEHEADEREXCEPTION = "DuplicateHeader";
 
         [Fact]
         public async Task ConvertFromCsvToTAsync_ReturnsCorrectNumberOfRecords()
@@ -32,7 +34,7 @@ namespace DataIntegrationTool.Test
         public async Task ConvertFromCsvToTAsync_ReturnsEmptyList()
         {
             // Act
-            var result = (await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersEmpty)).ToList();
+            var result = (await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerEmpty)).ToList();
 
             // Assert
             Assert.Empty(result);
@@ -94,8 +96,34 @@ namespace DataIntegrationTool.Test
                 var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomersMissingHeaders);
             });
 
-            Assert.Equal(CsvErrorType.HeaderValidation, ex.ErrorType);
-            Assert.Contains(HEADERVALIDATIONEXCEPTION, ex.Message);
+            Assert.Equal(CsvErrorType.MissingHeader, ex.ErrorType);
+            Assert.Contains(MISSINGHEADEREXCEPTION, ex.Message);
+        }
+
+        [Fact]
+        public async Task ConvertFromCsvToTAsync_MissingAllHeaders_ThrowsException()
+        {
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
+            {
+                var result = await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerMissingAllHeaders);
+            });
+
+            Assert.Equal(CsvErrorType.MissingAllHeaders, ex.ErrorType);
+            Assert.Contains(MISSINGALLHEADERSEXCEPTION, ex.Message);
+        }
+
+        [Fact]
+        public async Task ConvertFromCsvToTAsync_DuplicateHeader_ThrowsExceptionWithCorrectErrorType()
+        {
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
+            {
+                await new CsvReaderService().ConvertFromCsvToTAsync<CustomerRaw>(MockCsv.CustomerDuplicateHeader);
+            });
+
+            Assert.Equal(CsvErrorType.DuplicateHeader, ex.ErrorType);
+            Assert.Contains(DUPLICATEHEADEREXCEPTION, ex.Message);
         }
 
         [Fact]

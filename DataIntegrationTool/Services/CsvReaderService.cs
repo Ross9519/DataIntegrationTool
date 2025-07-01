@@ -9,9 +9,13 @@ namespace DataIntegrationTool.Services
     public class CsvReaderService : ICsvReaderService
     {
         private const string ERRORMESSAGE = "Errore durante la lettura del file CSV";
+        private const char CSVSEPARATOR = ',';
+        private static readonly char[] firstLineSeparator = ['\r', '\n'];
 
         public async Task<IEnumerable<T>> ConvertFromCsvToTAsync<T>(string csvContent) where T : class
         {
+            ValidateHeaders(csvContent);
+
             try
             {
                 var reader = new StringReader(csvContent);
@@ -29,7 +33,7 @@ namespace DataIntegrationTool.Services
                     FileNotFoundException => CsvErrorType.FileNotFound,
                     CsvHelper.MissingFieldException => CsvErrorType.MissingField,
                     TypeConverterException => CsvErrorType.TypeConversion,
-                    HeaderValidationException => CsvErrorType.HeaderValidation,
+                    HeaderValidationException => CsvErrorType.MissingHeader,
                     _ => CsvErrorType.Generic
                 };
 
@@ -49,6 +53,23 @@ namespace DataIntegrationTool.Services
 
             var csvContent = await File.ReadAllTextAsync(filePath);
             return await ConvertFromCsvToTAsync<T>(csvContent);
+        }
+
+        private static void ValidateHeaders(string csvContent)
+        {
+            var firstLine = csvContent.Split(firstLineSeparator, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() 
+                ?? throw new CsvReadException(CsvErrorType.MissingAllHeaders, $"{ERRORMESSAGE}: {CsvErrorType.MissingAllHeaders}", null);
+            
+            var headers = firstLine.Split(CSVSEPARATOR);
+            var duplicates = headers.GroupBy(h => h.Trim())
+                                    .Where(g => g.Count() > 1)
+                                    .Select(g => g.Key);
+
+            if (duplicates.Any())
+            {
+                var message = $"{ERRORMESSAGE}: {CsvErrorType.DuplicateHeader}\rDuplicati: {string.Join(", ", duplicates)}";
+                throw new CsvReadException(CsvErrorType.DuplicateHeader, message, null);
+            }
         }
     }
 }

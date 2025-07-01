@@ -11,6 +11,9 @@
         MissingField,
         TypeConversion,
         HeaderValidation,
+        MissingHeader,
+        MissingAllHeaders,
+        DuplicateHeader,
         Generic
     }
 }
