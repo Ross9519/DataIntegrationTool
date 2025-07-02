@@ -1,5 +1,5 @@
 ﻿using CsvHelper.Configuration.Attributes;
-using DataIntegrationTool.Services;
+using DataIntegrationTool.Utils;
 
 namespace DataIntegrationTool.Models
 {

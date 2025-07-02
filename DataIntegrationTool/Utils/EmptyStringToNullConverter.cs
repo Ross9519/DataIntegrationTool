@@ -2,7 +2,7 @@
 using CsvHelper.TypeConversion;
 using CsvHelper;
 
-namespace DataIntegrationTool.Services
+namespace DataIntegrationTool.Utils
 {
     public class EmptyStringToNullConverter : StringConverter
     {

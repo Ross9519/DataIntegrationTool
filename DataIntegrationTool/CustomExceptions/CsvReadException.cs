@@ -1,19 +1,9 @@
-﻿namespace DataIntegrationTool.CustomExceptions
-{
-    public class CsvReadException(CsvErrorType errorType, string message, Exception? innerException = null) : Exception(message, innerException)
-    {
-        public CsvErrorType ErrorType { get; } = errorType;
-    }
+﻿using DataIntegrationTool.Utils;
 
-    public enum CsvErrorType
+namespace DataIntegrationTool.CustomExceptions
+{
+    public class CsvReadException(CsvEnums.CsvErrorType errorType, string message, Exception? innerException = null) : Exception(message, innerException)
     {
-        FileNotFound,
-        MissingField,
-        TypeConversion,
-        HeaderValidation,
-        MissingHeader,
-        MissingAllHeaders,
-        DuplicateHeader,
-        Generic
+        public CsvEnums.CsvErrorType ErrorType { get; } = errorType;
     }
 }

@@ -2,25 +2,25 @@ using DataIntegrationTool.Services;
 using DataIntegrationTool.Models;
 using DataIntegrationTool.CustomExceptions;
 using DataIntegrationTool.Test.TestData;
+using static DataIntegrationTool.Utils.CsvEnums;
+using static DataIntegrationTool.Utils.Constants;
+using System.Text;
+using DataIntegrationTool.Config;
 namespace DataIntegrationTool.Test
 {
     public class CsvReaderServiceTests
     {
-        private const string FILENOTFOUNDEXCEPTION = "FileNotFound";
-        private const string MISSINGFIELDEXCEPTION = "MissingField";
-        private const string HEADERVALIDATIONEXCEPTION = "HeaderValidation";
-        private const string MISSINGHEADEREXCEPTION = "MissingHeader";
-        private const string MISSINGALLHEADERSEXCEPTION = "MissingAllHeaders";
-        private const string DUPLICATEHEADEREXCEPTION = "DuplicateHeader";
+        private static readonly CsvReaderService reader = new();
+        private static readonly CsvReaderOptionsConfig options = new();
 
         [Fact]
-        public async Task HandleContentAsync_ReturnsCorrectNumberOfRecords()
+        public async Task ReadCsvAsync_ReturnsCorrectNumberOfRecords()
         {
             // Arrange
             var expectedCount = 2;
 
             // Act
-            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersTest)).ToList();
+            var result = (await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersTest), options, "utf-8")).ToList();
 
             // Assert
             Assert.Equal(expectedCount, result.Count);
@@ -31,36 +31,20 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task HandleContentAsync_ReturnsEmptyList()
+        public async Task ReadCsvAsync_ReturnsEmptyList()
         {
             // Act
-            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerEmpty)).ToList();
+            var result = (await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomerEmpty), options, "utf-8")).ToList();
 
             // Assert
             Assert.Empty(result);
         }
 
         [Fact]
-        public async Task HandleFilePathAsync_WrongFilePath_ThrowsException()
-        {
-            // Arrange
-            var testCsv = "TestData/not_existent_file.csv";
-
-            // Assert
-            var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
-            {
-                await new CsvReaderService().HandleFilePathAsync<CustomerRaw>(testCsv);
-            });
-
-            Assert.Equal(CsvErrorType.FileNotFound, ex.ErrorType);
-            Assert.Contains(FILENOTFOUNDEXCEPTION, ex.Message);
-        }
-
-        [Fact]
-        public async Task HandleContentAsync_OptionalFieldsMissing_ParsesSuccessfully()
+        public async Task ReadCsvAsync_OptionalFieldsMissing_ParsesSuccessfully()
         {
             //Assert
-            var result = (await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersOptionalFieldsMissing)).ToList();
+            var result = (await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersOptionalFieldsMissing), options, "utf-8" )).ToList();
 
             // Assert
             Assert.Single(result);
@@ -75,12 +59,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task HandleContentAsync_MissingHeader_ThrowsException()
+        public async Task ReadCsvAsync_MissingHeader_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersMissingHeaders);
+                var result = await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersMissingHeaders), options, "utf-8");
             });
 
             Assert.Equal(CsvErrorType.MissingHeader, ex.ErrorType);
@@ -88,12 +72,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task HandleContentAsync_MissingAllHeaders_ThrowsException()
+        public async Task ReadCsvAsync_MissingAllHeaders_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerMissingAllHeaders);
+                var result = await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomerMissingAllHeaders), options, "utf-8");
             });
 
             Assert.Equal(CsvErrorType.MissingAllHeaders, ex.ErrorType);
@@ -101,12 +85,12 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task HandleContentAsync_DuplicateHeader_ThrowsExceptionWithCorrectErrorType()
+        public async Task ReadCsvAsync_DuplicateHeader_ThrowsExceptionWithCorrectErrorType()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomerDuplicateHeader);
+                await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomerDuplicateHeader), options, "utf-8");
             });
 
             Assert.Equal(CsvErrorType.DuplicateHeader, ex.ErrorType);
@@ -114,16 +98,21 @@ namespace DataIntegrationTool.Test
         }
 
         [Fact]
-        public async Task HandleContentAsync_MalformedRows_ThrowsException()
+        public async Task ReadCsvAsync_MalformedRows_ThrowsException()
         {
             // Act & Assert
             var ex = await Assert.ThrowsAsync<CsvReadException>(async () =>
             {
-                var result = await new CsvReaderService().HandleContentAsync<CustomerRaw>(MockCsv.CustomersMalformedRows);
+                var result = await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersMalformedRows), options, "utf-8");
             });
 
             Assert.Equal(CsvErrorType.MissingField, ex.ErrorType);
             Assert.Contains(MISSINGFIELDEXCEPTION, ex.Message);
+        }
+
+        private static Stream ToStream(string content, string encoding = "utf-8")
+        {
+            return new MemoryStream(Encoding.GetEncoding(encoding).GetBytes(content));
         }
     }
 }

@@ -1,38 +1,36 @@
-﻿using DataIntegrationTool.Services.Interfaces;
-using DataIntegrationTool.Services;
-using DataIntegrationTool.Models;
+﻿using DataIntegrationTool.Models;
 using Microsoft.Extensions.Configuration;
+using DataIntegrationTool.Config;
+using static DataIntegrationTool.Utils.Constants;
+using System.Text;
+using DataIntegrationTool.Providers.Factories;
 
 var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile(APPSETTINGS, optional: false, reloadOnChange: true)
     .Build();
 
-var csvOptions = configuration.GetSection("CsvReaderOptions").Get<CsvReaderOptions>();
-var inputSource = configuration.GetSection("InputSource").Get<InputSource>();
+var etlConfig = configuration.GetSection(ETL).Get<EtlConfiguration>() 
+    ?? throw new InvalidOperationException($"{ETL} {ERRORMESSAGEPROGRAM}");
 
-if (inputSource == null || string.IsNullOrWhiteSpace(inputSource.Type))
-{
-    throw new InvalidOperationException("InputSource configuration is missing or invalid.");
-}
+var errorMessageBuilder = new StringBuilder();
 
-ICsvReaderService csvReader = new CsvReaderService();
+if (etlConfig.Input == null)
+    errorMessageBuilder.AppendLine($"{INPUT} {ERRORMESSAGEPROGRAM}");
+if (etlConfig.Output == null)
+    errorMessageBuilder.AppendLine($"{OUTPUT} {ERRORMESSAGEPROGRAM}");
+if (!etlConfig.Transformations.Any())
+    errorMessageBuilder.AppendLine($"{TRANSFORMATION} {ERRORMESSAGEPROGRAM}");
+
+var errorMessage = errorMessageBuilder.ToString();
+
+if(!string.IsNullOrEmpty(errorMessage))
+    throw new InvalidOperationException(errorMessage);
+
 
 try
 {
-    IEnumerable<CustomerRaw> customers;
-
-    if (inputSource.Type == "File")
-    {
-        customers = await csvReader.HandleFilePathAsync<CustomerRaw>(inputSource.FilePath, csvOptions);
-    }
-    else if (inputSource.Type == "String")
-    {
-        customers = await csvReader.HandleContentAsync<CustomerRaw>(inputSource.Content, csvOptions);
-    }
-    else
-    {
-        throw new InvalidOperationException("Tipo InputSource non valido.");
-    }
+    var inputProvider = InputProviderFactory.Create(etlConfig.Input!);
+    var customers = await inputProvider.CreateObjectFromInputAsync<CustomerRaw>();
 
     Console.WriteLine("Customers loaded successfully:");
     foreach (var customer in customers)
@@ -42,5 +40,5 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Errore durante la lettura del file CSV: {ex.Message}");
+    Console.WriteLine($"{ERRORMESSAGE}: {ex.Message}");
 }

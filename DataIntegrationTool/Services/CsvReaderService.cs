@@ -1,29 +1,35 @@
 ﻿using CsvHelper;
 using CsvHelper.Configuration;
 using CsvHelper.TypeConversion;
+using DataIntegrationTool.Config;
 using DataIntegrationTool.CustomExceptions;
 using DataIntegrationTool.Services.Interfaces;
+using static DataIntegrationTool.Utils.CsvEnums;
+using static DataIntegrationTool.Utils.Constants;
+using System.Text;
+using DataIntegrationTool.Utils;
 
 namespace DataIntegrationTool.Services
 {
     public class CsvReaderService : ICsvReaderService
     {
-        private const string ERRORMESSAGE = "Errore durante la lettura del file CSV";
-        private const char CSVSEPARATOR = ',';
-        private static readonly char[] firstLineSeparator = ['\r', '\n'];
-
-
-        public async Task<IEnumerable<T>> HandleContentAsync<T>(string? csvContent, CsvReaderOptions? options = null) where T : class
+        public async Task<IEnumerable<T>> ReadCsvAsync<T>(Stream csvStream, CsvReaderOptionsConfig? options, string encoding) where T : class
         {
-            csvContent ??= string.Empty;
-
-            ValidateHeaders(csvContent);
-
             try
             {
-                var reader = new StringReader(csvContent);
+                var (preparedStream, realEncoding) = StreamUtils.PrepareStreamAndEncoding(csvStream, encoding);
+                
+                options ??= new CsvReaderOptionsConfig();
 
-                using var csv = new CsvReader(reader, GetCsvConfigFromCsvOpt(options));
+                var (headers, prependedStream) = ReadHeaderPreserveStream(preparedStream, encoding);
+                
+                ValidateHeaders(headers, options);
+
+                var csvConfig = GetCsvConfigFromCsvOpt(options);
+
+                var reader = new StreamReader(prependedStream, realEncoding, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+
+                using var csv = new CsvReader(reader, csvConfig);
 
                 return await csv.GetRecordsAsync<T>().ToListAsync();
             }
@@ -33,85 +39,31 @@ namespace DataIntegrationTool.Services
             }
         }
 
-        public async Task<IEnumerable<T>> HandleStreamAsync<T>(Stream csvStream, CsvReaderOptions? options = null) where T : class
+        private static void ValidateHeaders(string firstLine, CsvReaderOptionsConfig options)
         {
-            ValidateHeaders(csvStream);
+            if(string.IsNullOrWhiteSpace(firstLine))
+                throw new CsvReadException(CsvErrorType.MissingAllHeaders, $"{ERRORMESSAGE}: {CsvErrorType.MissingAllHeaders}", null);
 
-            try
-            {
-                var reader = new StreamReader(csvStream);
-
-                using var csv = new CsvReader(reader, GetCsvConfigFromCsvOpt(options));
-
-                return await csv.GetRecordsAsync<T>().ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                throw MapCsvException(ex);
-            }
-        }
-
-        public async Task<IEnumerable<T>> HandleFilePathAsync<T>(string filePath, CsvReaderOptions? options = null) where T : class
-        {
-            if (!File.Exists(filePath))
-            {
-                var errorType = CsvErrorType.FileNotFound;
-                var message = $"{ERRORMESSAGE}: {errorType}";
-                throw new CsvReadException(errorType, message, new FileNotFoundException());
-            }
-
-            using var stream = File.OpenRead(filePath);
-            return await HandleStreamAsync<T>(stream, options);
-        }
-
-        private static void ValidateHeaders(string csvContent)
-        {
-            var firstLine = csvContent.Split(firstLineSeparator, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() 
-                ?? throw new CsvReadException(CsvErrorType.MissingAllHeaders, $"{ERRORMESSAGE}: {CsvErrorType.MissingAllHeaders}", null);
-            
-            var headers = firstLine.Split(CSVSEPARATOR);
+            var headers = firstLine.Split(options.Delimiter);
             var duplicates = headers.GroupBy(h => h.Trim())
                                     .Where(g => g.Count() > 1)
                                     .Select(g => g.Key);
 
             if (duplicates.Any())
             {
-                var message = $"{ERRORMESSAGE}: {CsvErrorType.DuplicateHeader}\rDuplicati: {string.Join(", ", duplicates)}";
+                var message = $"{ERRORMESSAGE}: {CsvErrorType.DuplicateHeader}\rDuplicati: {string.Join(options.Delimiter, duplicates)}";
                 throw new CsvReadException(CsvErrorType.DuplicateHeader, message, null);
             }
-        }
-
-        private static void ValidateHeaders(Stream csvStream)
-        {
-            long originalPosition = csvStream.Position;
-            
-            using var reader = new StreamReader(csvStream, leaveOpen: true);
-
-            var firstLine = reader.ReadLine()
-                ?? throw new CsvReadException(CsvErrorType.MissingAllHeaders, $"{ERRORMESSAGE}: {CsvErrorType.MissingAllHeaders}", null);
-
-            var headers = firstLine.Split(CSVSEPARATOR);
-            var duplicates = headers.GroupBy(h => h.Trim())
-                                    .Where(g => g.Count() > 1)
-                                    .Select(g => g.Key);
-
-            if (duplicates.Any())
-            {
-                var message = $"{ERRORMESSAGE}: {CsvErrorType.DuplicateHeader}\rDuplicati: {string.Join(", ", duplicates)}";
-                throw new CsvReadException(CsvErrorType.DuplicateHeader, message, null);
-            }
-
-            csvStream.Position = originalPosition;
         }
 
         private static CsvReadException MapCsvException(Exception ex)
         {
             var errorType = ex switch
             {
-                FileNotFoundException => CsvErrorType.FileNotFound,
                 CsvHelper.MissingFieldException => CsvErrorType.MissingField,
                 TypeConverterException => CsvErrorType.TypeConversion,
                 HeaderValidationException => CsvErrorType.MissingHeader,
+                CsvReadException => ((CsvReadException)ex).ErrorType,
                 _ => CsvErrorType.Generic
             };
 
@@ -119,10 +71,8 @@ namespace DataIntegrationTool.Services
             return new CsvReadException(errorType, message, ex);
         }
 
-        private static CsvConfiguration GetCsvConfigFromCsvOpt(CsvReaderOptions? options)
+        private static CsvConfiguration GetCsvConfigFromCsvOpt(CsvReaderOptionsConfig options)
         {
-            options ??= new CsvReaderOptions();
-
             return new CsvConfiguration(options.Culture)
             {
                 Delimiter = options.Delimiter.ToString(),
@@ -130,6 +80,50 @@ namespace DataIntegrationTool.Services
                 IgnoreBlankLines = options.IgnoreBlankLines,
                 AllowComments = options.AllowComments
             };
+        }
+
+        private static (string header, Stream restStream) ReadHeaderPreserveStream(Stream input, string encodingName)
+        {
+            var encoding = Encoding.GetEncoding(encodingName);
+            var decoder = encoding.GetDecoder();
+
+            var charBuffer = new char[1];
+            var byteBuffer = new byte[1];
+
+            var headerText = new StringBuilder();
+
+            bool foundNewline = false;
+            var readBuffer = new List<byte>();
+
+            while (!foundNewline)
+            {
+                int read = input.Read(byteBuffer, 0, 1);
+                if (read == 0)
+                    break;
+
+                readBuffer.Add(byteBuffer[0]);
+
+                int charsDecoded = decoder.GetChars(byteBuffer, 0, 1, charBuffer, 0);
+                if (charsDecoded > 0)
+                {
+                    char c = charBuffer[0];
+                    headerText.Append(c);
+                    if (c == '\n')
+                        foundNewline = true;
+                }
+            }
+
+            if (headerText.Length == 0)
+                throw new CsvReadException(CsvErrorType.MissingAllHeaders, $"{ERRORMESSAGE}: {CsvErrorType.MissingAllHeaders}", null);
+
+            // Header come stringa
+            var headerString = headerText.ToString().TrimEnd('\r', '\n');
+
+            // Prepara uno stream che ri-espone i byte letti + il resto
+            var preambleStream = new MemoryStream([.. readBuffer]);
+            var combinedStream = new ConcatenatedStream(preambleStream, input, leaveOpen: true);
+
+            return (headerString, combinedStream);
         }
     }
 }
