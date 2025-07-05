@@ -1,11 +1,11 @@
-using DataIntegrationTool.Services;
-using DataIntegrationTool.Models;
-using DataIntegrationTool.CustomExceptions;
 using DataIntegrationTool.Test.TestData;
-using static DataIntegrationTool.Utils.CsvEnums;
-using static DataIntegrationTool.Utils.Constants;
+using static DataIntegrationTool.Shared.Utils.CsvEnums;
+using static DataIntegrationTool.Shared.Utils.Constants;
 using System.Text;
-using DataIntegrationTool.Config;
+using DataIntegrationTool.Infrastructure.Exceptions;
+using DataIntegrationTool.Infrastructure.Services;
+using DataIntegrationTool.Application.Config;
+using DataIntegrationTool.Application.Models;
 namespace DataIntegrationTool.Test
 {
     public class CsvReaderServiceTests
