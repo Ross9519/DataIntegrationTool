@@ -25,9 +25,9 @@ namespace DataIntegrationTool.Test
             // Assert
             Assert.Equal(expectedCount, result.Count);
             var customer = result[0];
-            Assert.Equal("Anna", customer.FirstName);
-            Assert.Equal("Test", customer.LastName);
-            Assert.Equal("anna.test@example.com", customer.Email);
+            Assert.Equal("Anna", customer.FirstName.Value);
+            Assert.Equal("Test", customer.LastName.Value);
+            Assert.Equal("anna.test@example.com", customer.Email.Value);
         }
 
         [Fact]
@@ -49,9 +49,9 @@ namespace DataIntegrationTool.Test
             // Assert
             Assert.Single(result);
             var customer = result[0];
-            Assert.Equal("Laura", customer.FirstName);
-            Assert.Equal("Verdi", customer.LastName);
-            Assert.Equal("laura.verdi@example.com", customer.Email);
+            Assert.Equal("Laura", customer.FirstName.Value);
+            Assert.Equal("Verdi", customer.LastName.Value);
+            Assert.Equal("laura.verdi@example.com", customer.Email.Value);
             Assert.Null(customer.Company);
             Assert.Null(customer.JobTitle);
             Assert.Null(customer.Phone);

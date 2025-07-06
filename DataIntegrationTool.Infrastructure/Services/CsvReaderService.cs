@@ -8,6 +8,7 @@ using DataIntegrationTool.Application.Interfaces;
 using DataIntegrationTool.Infrastructure.Exceptions;
 using DataIntegrationTool.Application.Config;
 using DataIntegrationTool.Shared.Utils;
+using DataIntegrationTool.Application.DTOs;
 
 namespace DataIntegrationTool.Infrastructure.Services
 {
@@ -31,12 +32,22 @@ namespace DataIntegrationTool.Infrastructure.Services
 
                 using var csv = new CsvReader(reader, csvConfig);
 
+                AddConverterForInternalDto(csv);
+
                 return await csv.GetRecordsAsync<T>().ToListAsync();
             }
             catch (Exception ex)
             {
                 throw MapCsvException(ex);
             }
+        }
+
+        private static void AddConverterForInternalDto(CsvReader csv)
+        {
+            csv.Context.TypeConverterCache.AddConverter<PhoneDto>(new InternalDtoConverter<PhoneDto>());
+            csv.Context.TypeConverterCache.AddConverter<EmailDto>(new InternalDtoConverter<EmailDto>());
+            csv.Context.TypeConverterCache.AddConverter<NameDto>(new InternalDtoConverter<NameDto>());
+            csv.Context.TypeConverterCache.AddConverter<CountryDto>(new InternalDtoConverter<CountryDto>());
         }
 
         private static void ValidateHeaders(string firstLine, CsvReaderOptionsConfig options)

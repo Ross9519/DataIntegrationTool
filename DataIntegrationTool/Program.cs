@@ -10,6 +10,7 @@ using DataIntegrationTool.Infrastructure.InputProviders;
 using DataIntegrationTool.Application.Factories;
 using static DataIntegrationTool.Shared.Utils.CsvEnums;
 using DataIntegrationTool.Application.Interfaces;
+using DataIntegrationTool.Application.DataCleaning;
 
 var builder = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
@@ -73,6 +74,12 @@ try
     var customers = await inputProvider.CreateObjectFromInputAsync<CustomerRaw>();
 
     Console.WriteLine("Customers loaded successfully:");
+
+    var dataCleaner = new DefaultDataCleaner<CustomerRaw>();
+    dataCleaner.Clean(customers);
+
+    Console.WriteLine("Customers cleaned successfully:");
+
     foreach (var customer in customers)
     {
         Console.WriteLine($"{customer.FirstName} {customer.LastName} - {customer.Email}");

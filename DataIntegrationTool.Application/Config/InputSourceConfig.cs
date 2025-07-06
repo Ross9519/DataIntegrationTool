@@ -8,6 +8,8 @@ namespace DataIntegrationTool.Application.Config
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public InputType Type { get; set; }
 
+        public EntityType Model { get; set; }
+
         // Usato se Type == File
         public string? FilePath { get; set; }
 
@@ -23,6 +25,7 @@ namespace DataIntegrationTool.Application.Config
 
         // Opzionale, per configurare la lettura CSV
         public string Encoding { get; set; } = "utf-8";
+        public CleaningStrategyType CleaningStrategy { get; set; } = CleaningStrategyType.Default;
         public CsvReaderOptionsConfig Options { get; set; } = new();
     }
 }

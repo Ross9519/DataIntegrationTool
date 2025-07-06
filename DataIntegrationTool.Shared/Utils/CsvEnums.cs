@@ -101,5 +101,16 @@
             /// </summary>
             CustomScript
         }
+
+        public enum EntityType
+        {
+            Customer
+        }
+
+        public enum CleaningStrategyType
+        {
+            Default,
+            Customer
+        }
     }
 }
