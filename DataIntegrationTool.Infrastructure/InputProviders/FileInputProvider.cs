@@ -3,20 +3,19 @@ using DataIntegrationTool.Application.Interfaces;
 
 namespace DataIntegrationTool.Infrastructure.InputProviders
 {
-    public class FileInputProvider(ICsvReaderService csvService) : IInputProvider
+    public class FileInputProvider(ICsvReaderService csvService, IFileReader fileReader) : InputProviderBase<FileInputProvider>
     {
-        private InputSourceConfig _config = default!;
-
-        public async Task<IEnumerable<T>> CreateObjectFromInputAsync<T>() where T : class
+        public override async Task<IEnumerable<T>> CreateObjectFromInputAsync<T>() where T : class
         {
-            using var fileStream = new FileStream(_config.FilePath!, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return await csvService.ReadCsvAsync<T>(fileStream, _config.Options, _config.Encoding);
-        }
+            if (string.IsNullOrWhiteSpace(_config.FilePath))
+                throw new ArgumentNullException(nameof(_config.FilePath), "File path cannot be null or empty.");
 
-        public FileInputProvider WithConfig(InputSourceConfig config)
-        {
-            _config = config;
-            return this;
+            if (!fileReader.Exists(_config.FilePath))
+                throw new FileNotFoundException("File not found.", _config.FilePath);
+
+            using var stream = fileReader.OpenRead(_config.FilePath!);
+            var prova = csvService.ReadCsvAsync<T>(stream, _config.Options, _config.Encoding);
+            return await prova;
         }
     }
 }

@@ -75,6 +75,7 @@ namespace DataIntegrationTool.Infrastructure.Services
                 TypeConverterException => CsvErrorType.TypeConversion,
                 HeaderValidationException => CsvErrorType.MissingHeader,
                 CsvReadException => ((CsvReadException)ex).ErrorType,
+                ArgumentException argEx when argEx.Message.Contains("encoding", StringComparison.OrdinalIgnoreCase) => CsvErrorType.EncodingError,
                 _ => CsvErrorType.Generic
             };
 

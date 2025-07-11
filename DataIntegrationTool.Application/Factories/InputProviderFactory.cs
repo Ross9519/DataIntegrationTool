@@ -6,9 +6,9 @@ namespace DataIntegrationTool.Application.Factories
 {
     public class InputProviderFactory(IReadOnlyDictionary<InputType, InputProviderResolver> resolvers)
     {
-        public IInputProvider Create(InputSourceConfig config, ICsvReaderService csvService)
+        public IInputProvider Create(InputSourceConfig config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config));
+            ArgumentNullException.ThrowIfNull(config);
 
             if (resolvers.TryGetValue(config.Type, out var resolver))
             {

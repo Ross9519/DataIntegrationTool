@@ -6,7 +6,7 @@ using DataIntegrationTool.Infrastructure.Exceptions;
 using DataIntegrationTool.Infrastructure.Services;
 using DataIntegrationTool.Application.Config;
 using DataIntegrationTool.Application.Models;
-namespace DataIntegrationTool.Test
+namespace DataIntegrationTool.Tests.Infrastucture
 {
     public class CsvReaderServiceTests
     {
@@ -44,7 +44,7 @@ namespace DataIntegrationTool.Test
         public async Task ReadCsvAsync_OptionalFieldsMissing_ParsesSuccessfully()
         {
             //Assert
-            var result = (await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersOptionalFieldsMissing), options, "utf-8" )).ToList();
+            var result = (await reader.ReadCsvAsync<CustomerRaw>(ToStream(MockCsv.CustomersOptionalFieldsMissing), options, "utf-8")).ToList();
 
             // Assert
             Assert.Single(result);

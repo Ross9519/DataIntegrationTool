@@ -12,6 +12,7 @@
             MissingAllHeaders,
             DuplicateHeader,
             IncorrectFilePath,
+            EncodingError,
             Generic
         }
 

@@ -11,37 +11,7 @@ using DataIntegrationTool.Application.Factories;
 using static DataIntegrationTool.Shared.Utils.CsvEnums;
 using DataIntegrationTool.Application.Interfaces;
 using DataIntegrationTool.Application.DataCleaning;
-
-var builder = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
-    {
-        // Configurazione
-        services.AddSingleton(context.Configuration);
-
-        // Services concreti
-        services.AddTransient<ICsvReaderService, CsvReaderService>();
-
-        // Input Providers concreti
-        services.AddTransient<FileInputProvider>();
-        services.AddTransient<HttpInputProvider>();
-        services.AddTransient<StringInputProvider>();
-        services.AddTransient<DatabaseInputProvider>();
-
-        // Factory con delegate per risolvere input providers
-        services.AddSingleton<InputProviderFactory>(sp =>
-        {
-            return new(new Dictionary<InputType, InputProviderResolver>
-            {
-                [InputType.File] = config => sp.GetRequiredService<FileInputProvider>().WithConfig(config),
-                [InputType.Http] = config => sp.GetRequiredService<HttpInputProvider>().WithConfig(config),
-                [InputType.String] = config => sp.GetRequiredService<StringInputProvider>().WithConfig(config),
-                [InputType.Database] = config => sp.GetRequiredService<DatabaseInputProvider>().WithConfig(config),
-            });
-        });
-    })
-    .Build();
-
-var provider = builder.Services;
+using DataIntegrationTool.Infrastructure.DataAccess;
 
 
 var configuration = new ConfigurationBuilder()
@@ -66,11 +36,55 @@ if(!string.IsNullOrEmpty(errorMessage))
     throw new InvalidOperationException(errorMessage);
 
 
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureServices((context, services) =>
+    {
+        // Configurazione
+        services.AddSingleton(context.Configuration);
+
+        // Reader e client
+        services.AddTransient<IFileReader, FileReader>();
+        services.AddHttpClient(); // HttpClient sarà risolto automaticamente dai provider
+        services.AddScoped<IDatabaseAccessor>(sp =>
+        {
+            // Recupera la connection string (può essere vuota o null)
+            var configuration = sp.GetRequiredService<IConfiguration>();
+            var connString = etlConfig.Input?.ConnectionString;
+
+            // Passa la connection string anche se vuota
+            return new DatabaseAccessor(connString);
+        });
+
+        // CsvService
+        services.AddTransient<ICsvReaderService, CsvReaderService>();
+
+        // Input Providers
+        services.AddTransient<FileInputProvider>();
+        services.AddTransient<HttpInputProvider>();
+        services.AddTransient<StringInputProvider>();
+        services.AddTransient<DatabaseInputProvider>();
+
+        // Factory con i resolver
+        services.AddSingleton(sp =>
+        {
+            return new InputProviderFactory(new Dictionary<InputType, InputProviderResolver>
+            {
+                [InputType.File] = config => sp.GetRequiredService<FileInputProvider>().WithConfig(config),
+                [InputType.Http] = config => sp.GetRequiredService<HttpInputProvider>().WithConfig(config),
+                [InputType.String] = config => sp.GetRequiredService<StringInputProvider>().WithConfig(config),
+                [InputType.Database] = config => sp.GetRequiredService<DatabaseInputProvider>().WithConfig(config),
+            });
+        });
+    })
+    .Build();
+
+var provider = builder.Services;
+
 try
 {
     var factory = provider.GetRequiredService<InputProviderFactory>();
     var csvService = new CsvReaderService();
-    var inputProvider = factory.Create(etlConfig.Input!, csvService);
+    var inputProvider = factory.Create(etlConfig.Input!);
     var customers = await inputProvider.CreateObjectFromInputAsync<CustomerRaw>();
 
     Console.WriteLine("Customers loaded successfully:");

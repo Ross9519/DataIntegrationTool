@@ -9,7 +9,7 @@ namespace DataIntegrationTool.Application.DataCleaning
     {
         public void Clean(IEnumerable<T> raws)
         {
-            RemoveDuplicates(raws);
+            raws = RemoveDuplicates(raws);
 
             raws.ToList()
                 .ForEach(Clean);
@@ -17,7 +17,7 @@ namespace DataIntegrationTool.Application.DataCleaning
 
         public void Clean(T raw)
         {
-            ArgumentNullException.ThrowIfNull(nameof(raw));
+            ArgumentNullException.ThrowIfNull(raw);
 
             Type type = typeof(T);
             var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
@@ -61,9 +61,11 @@ namespace DataIntegrationTool.Application.DataCleaning
 
         private static void CleanObject(object obj)
         {
-            var method = typeof(DefaultDataCleaner<T>).GetMethod(nameof(Clean))!
-                .MakeGenericMethod(obj.GetType());
-            method.Invoke(null, [obj]);
+            var cleanerType = typeof(DefaultDataCleaner<>).MakeGenericType(obj.GetType());
+            var cleaner = Activator.CreateInstance(cleanerType);
+            var method = cleanerType.GetMethod("Clean", [obj.GetType()]);
+
+            method?.Invoke(cleaner, [obj]);
         }
 
         private static bool IsClassType(Type type)

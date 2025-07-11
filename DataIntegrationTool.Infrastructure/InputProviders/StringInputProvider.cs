@@ -4,20 +4,15 @@ using DataIntegrationTool.Application.Interfaces;
 
 namespace DataIntegrationTool.Infrastructure.InputProviders
 {
-    public class StringInputProvider(ICsvReaderService csvService) : IInputProvider
+    public class StringInputProvider(ICsvReaderService csvService) : InputProviderBase<StringInputProvider>
     {
-        private InputSourceConfig _config = default!;
-
-        public async Task<IEnumerable<T>> CreateObjectFromInputAsync<T>() where T : class
+        public override async Task<IEnumerable<T>> CreateObjectFromInputAsync<T>() where T : class
         {
-            var bytes = Encoding.GetEncoding(_config.Encoding).GetBytes(_config.CsvStringContent!);
+            if (string.IsNullOrWhiteSpace(_config.CsvStringContent))
+                throw new ArgumentNullException(nameof(_config.CsvStringContent), "CSV string content cannot be null or empty.");
+
+            var bytes = Encoding.GetEncoding(_config.Encoding).GetBytes(_config.CsvStringContent);
             return await csvService.ReadCsvAsync<T>(new MemoryStream(bytes), _config.Options, _config.Encoding);
-        }
-
-        public StringInputProvider WithConfig(InputSourceConfig config)
-        {
-            _config = config;
-            return this;
         }
     }
 }
