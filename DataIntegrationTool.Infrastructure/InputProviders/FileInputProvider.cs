@@ -14,8 +14,7 @@ namespace DataIntegrationTool.Infrastructure.InputProviders
                 throw new FileNotFoundException("File not found.", _config.FilePath);
 
             using var stream = fileReader.OpenRead(_config.FilePath!);
-            var prova = csvService.ReadCsvAsync<T>(stream, _config.Options, _config.Encoding);
-            return await prova;
+            return await csvService.ReadCsvAsync<T>(stream, _config.Options, _config.Encoding);
         }
     }
 }

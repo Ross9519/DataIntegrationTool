@@ -10,7 +10,7 @@ namespace DataIntegrationTool.Shared.Utils
         [GeneratedRegex(@"^[a-z0-9._\-+]+@[a-z0-9.\-]+\.[a-z]{2,}$")]
         public static partial Regex EmailSimpleValidationRegex();
 
-        [GeneratedRegex(@"[\s\-\(\)]")]
+        [GeneratedRegex(@"[^\d\+]")]
         public static partial Regex RemoveCharInPhoneRegex();
 
         [GeneratedRegex(@"^\+(?<prefix>\d{1,4})(?<number>\d{6,15})$")]
@@ -24,6 +24,19 @@ namespace DataIntegrationTool.Shared.Utils
 
         [GeneratedRegex(@"[^a-z0-9@._\-+]")]
         public static partial Regex RemoveNotEmailFriendlyCharRegex();
+
+        [GeneratedRegex(@"^[\p{L} \-']+$")]
+        public static partial Regex InvalidCharNameRegex();
+
+        [GeneratedRegex(@"^\+\d{6,15}$")]
+        public static partial Regex PhoneValidationRegex();
+
+        [GeneratedRegex(
+            @"^(?!\.)(""([^""\r\\]|\\[""\r\\])*""|" +
+            @"([-a-zA-Z0-9!#$%&'*+/=?^_`{|}~]|(?<!\.)\.)+)(?<!\.)" +
+            @"@[a-zA-Z0-9][\w\.-]*\.[a-zA-Z]{2,}$",
+            RegexOptions.Compiled)]
+        public static partial Regex EmailValidationRegex();
     }
 
 

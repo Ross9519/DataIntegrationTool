@@ -12,28 +12,7 @@ using static DataIntegrationTool.Shared.Utils.CsvEnums;
 using DataIntegrationTool.Application.Interfaces;
 using DataIntegrationTool.Application.DataCleaning;
 using DataIntegrationTool.Infrastructure.DataAccess;
-
-
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile(APPSETTINGS, optional: false, reloadOnChange: true)
-    .Build();
-
-var etlConfig = configuration.GetSection(ETL).Get<EtlConfiguration>() 
-    ?? throw new InvalidOperationException($"{ETL} {ERRORMESSAGEPROGRAM}");
-
-var errorMessageBuilder = new StringBuilder();
-
-if (etlConfig.Input == null)
-    errorMessageBuilder.AppendLine($"{INPUT} {ERRORMESSAGEPROGRAM}");
-if (etlConfig.Output == null)
-    errorMessageBuilder.AppendLine($"{OUTPUT} {ERRORMESSAGEPROGRAM}");
-if (!etlConfig.Transformations.Any())
-    errorMessageBuilder.AppendLine($"{TRANSFORMATION} {ERRORMESSAGEPROGRAM}");
-
-var errorMessage = errorMessageBuilder.ToString();
-
-if(!string.IsNullOrEmpty(errorMessage))
-    throw new InvalidOperationException(errorMessage);
+using DataIntegrationTool.Application.DataValidation;
 
 
 var builder = Host.CreateDefaultBuilder(args)
@@ -49,7 +28,7 @@ var builder = Host.CreateDefaultBuilder(args)
         {
             // Recupera la connection string (può essere vuota o null)
             var configuration = sp.GetRequiredService<IConfiguration>();
-            var connString = etlConfig.Input?.ConnectionString;
+            var connString = configuration["ETL:Input:ConnectionString"];
 
             // Passa la connection string anche se vuota
             return new DatabaseAccessor(connString);
@@ -80,12 +59,37 @@ var builder = Host.CreateDefaultBuilder(args)
 
 var provider = builder.Services;
 
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile(APPSETTINGS, optional: false, reloadOnChange: true)
+    .Build();
+
+var etlConfig = configuration.GetSection(ETL).Get<EtlConfiguration>() 
+    ?? throw new InvalidOperationException($"{ETL} {ERRORMESSAGEPROGRAM}");
+
+var errorMessageBuilder = new StringBuilder();
+
+if (etlConfig.Input == null)
+    errorMessageBuilder.AppendLine($"{INPUT} {ERRORMESSAGEPROGRAM}");
+if (etlConfig.Output == null)
+    errorMessageBuilder.AppendLine($"{OUTPUT} {ERRORMESSAGEPROGRAM}");
+if (!etlConfig.Transformations.Any())
+    errorMessageBuilder.AppendLine($"{TRANSFORMATION} {ERRORMESSAGEPROGRAM}");
+
+var errorMessage = errorMessageBuilder.ToString();
+
+if(!string.IsNullOrEmpty(errorMessage))
+    throw new InvalidOperationException(errorMessage);
+
 try
 {
     var factory = provider.GetRequiredService<InputProviderFactory>();
     var csvService = new CsvReaderService();
     var inputProvider = factory.Create(etlConfig.Input!);
-    var customers = await inputProvider.CreateObjectFromInputAsync<CustomerRaw>();
+    var customers = (await inputProvider.CreateObjectFromInputAsync<CustomerRaw>()).ToList();
+    customers.ForEach(x => {
+        if (x.Phone != null && x.Country != null)
+            x.Phone.Country = x.Country.Value; Console.WriteLine($"After assign: Phone.Country = '{x.Phone?.Country}'");
+    });
 
     Console.WriteLine("Customers loaded successfully:");
 
@@ -94,9 +98,23 @@ try
 
     Console.WriteLine("Customers cleaned successfully:");
 
-    foreach (var customer in customers)
+    var validator = new DefaultDataValidator<CustomerRaw>();
+    var report = validator.Validate(customers);
+
+    Console.WriteLine("Customers validated successfully:");
+
+    foreach (var customer in report.ValidItems)
     {
-        Console.WriteLine($"{customer.FirstName} {customer.LastName} - {customer.Email}");
+        Console.WriteLine($"Valido: {customer.FirstName.Value} {customer.LastName.Value}");
+    }
+
+    foreach (var (invalid, result) in report.InvalidItems)
+    {
+        Console.WriteLine($"Invalido: {invalid.FirstName?.Value} {invalid.LastName?.Value}");
+        foreach (var error in result.Errors)
+        {
+            Console.WriteLine($"   {error.Key}: {error.Value}");
+        }
     }
 }
 catch (Exception ex)

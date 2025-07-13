@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-using System.Text;
-using DataIntegrationTool.Application.Config;
+﻿using System.Text;
 using DataIntegrationTool.Application.Interfaces;
 
 namespace DataIntegrationTool.Infrastructure.InputProviders

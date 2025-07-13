@@ -1,11 +1,11 @@
 FirstName,LastName,Email,Company,JobTitle,Phone,Country
- John , DOE , JOHN.DOE@EXAMPLE.COM , Contoso Ltd , Developer , +123 456 789 , us 
-Jane ,Smith , jane.smith@example.com , Fabrikam ,  Product Manager , (987)654321 , CAN
-  Alice , Johnson , ALICE.J@EXAMPLE.COM , Globex , Data Analyst ,  +111-222-333 , uk 
-BOB ,Brown , bob.brown @ example.com , Initech ,System Administrator , +44 4555 666 , australia  
-emily , davis ,emily.davis@Example.Com ,  Umbrella Corp , UX Designer , +777.888.999 , GERMANY
-Michael , WILSON , michael.w @ example.com , Wonka Industries , Marketing Lead , +66-6555-444 , fr
- Sarah ,White , sarah.w@example.com , Stark Industries ,DevOps Engineer , +333 222 111 , Usa
-Tom ,BLACK , TOM.B@EXAMPLE.COM , Dunder Mifflin , Sales Associate , 999-888-777 , ca 
-Laura , Green , laura.g@EXAMPLE.com , Wayne Enterprises , IT Consultant , +1 (212) 121-21 , united kingdom 
- Steve ,Gray , steve.g@example.COM , Soylent Corp , HR Manager , +23 23 23 23 2 , GER
+john,DOE,john.doe@Example.COM,Acme Corp,Manager,0039 333 1234567,Italy
+mary,smith,MARY.SMITH@@gmail.com,,Developer,+44 7700 900123,UK
+  ,Brown,brown@example.com,,Designer,0039 123456,IT
+lucas,Nguyen,lucas.nguyen@@example..com,Startup,,+1 (555) 123-4567,USA
+Anna,Lee,anna.lee@example.com, ,CEO,0039123456789,Esp
+mike,O'Neal,mike.o'neal@example,Tech Solutions,CTO,12345,DE
+lisa,Chang,lisa.chang@example.com,,HR,+39 345 6789123,????
+ROBERT,johnson,robert.johnson@domain,Consulting,Consultant,+49 170 1234567,Germany
+Sara,connor,sara.connor@example.com,,Analyst,,UK
+David,Smith,david.smith@example,Corporation,Director,+39 333 3333333,Italy
